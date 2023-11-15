@@ -1,8 +1,5 @@
  package com.mycompany.gestion_de_datos_sakila;
-
-
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
@@ -79,16 +76,36 @@ public class Gestion_De_Datos_Sakila {
         // Menú SQL3Shakila4
         JMenu menu1 = new JMenu("Menú-1");
 
-        String[] tableNames1 = {"payment", "rental", "store", "payment-customer", "customer", "staff"};
+        String[] tableNames1 = {"payment", "rental", "store", "payment-customer", "customer", "staff", "Subconsulta de pagos"};
 
         for (String tableName : tableNames1) {
             JMenuItem menuItem = new JMenuItem("Info de la tabla " + tableName);
-            menuItem.addActionListener(e -> displayTableInfo(tableName));
+            switch (tableName) {
+                case "payment":
+                    menuItem.addActionListener(e -> displayPaymentInfo());
+                    break;
+                case "rental":
+                    menuItem.addActionListener(e -> displayRentalInfo());
+                    break;
+                case "store":
+                    menuItem.addActionListener(e -> displayStoreInfo());
+                    break;
+                case "payment-customer":
+                    menuItem.addActionListener(e -> displayPaymentCustomerInfo());
+                    break;
+                case "customer":
+                    menuItem.addActionListener(e -> displayCustomerInfo());
+                    break;
+                case "staff":
+                    menuItem.addActionListener(e -> displayStaffInfo());
+                    break;
+                case "Subconsulta de pagos":
+                    menuItem.addActionListener(e -> displayPaymentSubquery());
+                    break;
+            }
             menu1.add(menuItem);
         }
-        JMenuItem paymentSubqueryMenuItem = new JMenuItem("Consulta de pagos con subconsulta");
-        paymentSubqueryMenuItem.addActionListener(e -> displayPaymentSubquery());
-        menu1.add(paymentSubqueryMenuItem);
+
         // Menú SQL3Shakila5
         JMenu menu2 = new JMenu("Menú-2");
 
@@ -107,6 +124,7 @@ public class Gestion_De_Datos_Sakila {
         menuBar.add(menu1);
         menuBar.add(menu2);
 
+
         // Menú de canciones
         JMenu songsMenu = new JMenu("Canciones");
         menuBar.add(songsMenu);
@@ -118,78 +136,62 @@ public class Gestion_De_Datos_Sakila {
         frame.setJMenuBar(menuBar);
     }
 
-    private void displayTableInfo(String tableName) {
-        String query = getQueryForTable(tableName);
-        DefaultTableModel tableModel = new DefaultTableModel();
-
-        try (PreparedStatement statement = connection.prepareStatement(query); ResultSet resultSet = statement.executeQuery()) {
-
-            int columnCount = resultSet.getMetaData().getColumnCount();
-            for (int i = 1; i <= columnCount; i++) {
-                tableModel.addColumn(resultSet.getMetaData().getColumnName(i));
-            }
-
-            while (resultSet.next()) {
-                Object[] row = new Object[columnCount];
-                for (int i = 1; i <= columnCount; i++) {
-                    row[i - 1] = resultSet.getObject(i);
-                }
-                tableModel.addRow(row);
-            }
-
-            JTable table = new JTable(tableModel);
-            formatTable(table);
-            JOptionPane.showMessageDialog(frame, new JScrollPane(table), "Resultados de la consulta", JOptionPane.PLAIN_MESSAGE);
-        } catch (SQLException e) {
-            handleError("Error al ejecutar la consulta.", e);
-        }
+    private void displayPaymentInfo() {
+        String query = "SELECT * FROM payment";
+        executeAndDisplayQuery(query);
     }
 
-    private String getQueryForTable(String tableName) {
-        // La lógica para obtener la consulta SQL de cada tabla puede ser compleja
-        // Se podría implementar aquí o incluso en métodos separados para mayor claridad
-        // Por ahora, se deja como un simple placeholder.
-        return "SELECT * FROM " + tableName;
+    private void displayRentalInfo() {
+        String query = "SELECT * FROM rental";
+        executeAndDisplayQuery(query);
     }
 
-    private void formatTable(JTable table) {
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        TableColumnModel columnModel = table.getColumnModel();
-        for (int column = 0; column < table.getColumnCount(); column++) {
-            int width = 70;
-            for (int row = 0; row < table.getRowCount(); row++) {
-                TableCellRenderer cellRenderer = table.getCellRenderer(row, column);
-                Component c = table.prepareRenderer(cellRenderer, row, column);
-                width = Math.max(c.getPreferredSize().width + 1, width);
-            }
-            columnModel.getColumn(column).setPreferredWidth(width);
-        }
+    private void displayStoreInfo() {
+        String query = "SELECT * FROM store";
+        executeAndDisplayQuery(query);
     }
 
-/**
- * Muestra los resultados de una subconsulta compleja relacionada con pagos en la base de datos Sakila.
- * La subconsulta selecciona información detallada sobre pagos, clientes, alquileres, inventario, películas y tiendas asociadas.
- * Solo se incluyen pagos con un monto mayor a 3.99, y los resultados se ordenan por el primer nombre del cliente.
- * Esto lo hago porque quería probar hacer algo con una subconsulta, no es de lo que pediste.
- */
-private void displayPaymentSubquery() {
-    // Consulta SQL que realiza la subconsulta
-    String query = "SELECT p.payment_id, p.customer_id, p.amount, p.payment_date, c.first_name AS customer_name, "
-            + "r.inventory_id, f.title AS film_title, s.store_id, s.manager_staff_id, "
-            + "py.rental_id, py.return_date "
-            + "FROM payment p "
-            + "JOIN customer c ON c.customer_id = p.customer_id "
-            + "JOIN rental py ON py.rental_id = p.rental_id "
-            + "JOIN inventory r ON r.inventory_id = py.inventory_id "
-            + "JOIN film f ON f.film_id = r.film_id "
-            + "JOIN store s ON s.store_id = r.store_id "
-            + "WHERE p.amount > 3.99 "
-            + "ORDER BY c.first_name";
+    private void displayPaymentCustomerInfo() {
+        String query = "SELECT customer_id, amount, payment_date FROM payment WHERE amount > 3.99";
+        executeAndDisplayQuery(query);
+    }
 
-    // Ejecuta la consulta y muestra los resultados en una ventana de diálogo
-    executeAndDisplayQuery(query);
-}
+    private void displayCustomerInfo() {
+        String query = "SELECT * FROM customer";
+        executeAndDisplayQuery(query);
+    }
 
+    private void displayStaffInfo() {
+        String query = "SELECT * FROM staff";
+        executeAndDisplayQuery(query);
+    }
+
+    /**
+     * Muestra los resultados de una subconsulta compleja relacionada con pagos
+     * en la base de datos Sakila. La subconsulta selecciona información
+     * detallada sobre pagos, clientes, alquileres, inventario, películas y
+     * tiendas asociadas. Solo se incluyen pagos con un monto mayor a 3.99, y
+     * los resultados se ordenan por el primer nombre del cliente. Esto lo hago
+     * porque quería probar hacer algo con una subconsulta, no es de lo que
+     * pediste.
+     */
+    private void displayPaymentSubquery() {
+        // Consulta SQL que realiza la subconsulta
+        String query = "SELECT p.payment_id, p.customer_id, p.amount, p.payment_date, c.first_name AS customer_name, "
+                + "r.inventory_id, f.title AS film_title, s.store_id, s.manager_staff_id, "
+                + "py.rental_id, py.return_date "
+                + "FROM payment p "
+                + "JOIN customer c ON c.customer_id = p.customer_id "
+                + "JOIN rental py ON py.rental_id = p.rental_id "
+                + "JOIN inventory r ON r.inventory_id = py.inventory_id "
+                + "JOIN film f ON f.film_id = r.film_id "
+                + "JOIN store s ON s.store_id = r.store_id "
+                + "WHERE p.amount > 3.99 "
+                + "ORDER BY c.first_name";
+
+        // Ejecuta la consulta y muestra los resultados en una ventana de diálogo
+        executeAndDisplayQuery(query);
+    }
 
     private void displayCiudadesPorPais() {
         String pais = JOptionPane.showInputDialog(frame, "Ingrese el país en inglés (por ejemplo, Spain):");
@@ -211,24 +213,16 @@ private void displayPaymentSubquery() {
         }
     }
 
-private void displayInfoEmpleados() {
-    String pais = JOptionPane.showInputDialog(frame, "Ingrese el país:");
-    String ciudad = JOptionPane.showInputDialog(frame, "Ingrese la ciudad:");
+    private void displayInfoEmpleados() {
+        String pais = JOptionPane.showInputDialog(frame, "Ingrese el país:");
+        String ciudad = JOptionPane.showInputDialog(frame, "Ingrese la ciudad:");
 
-    if (pais != null && ciudad != null) {
-        String query = "SELECT * FROM staff "
-                + "WHERE address_id = ("
-                + "SELECT address.address_id FROM address "
-                + "INNER JOIN staff ON address.address_id = staff.address_id "
-                + "INNER JOIN city ON address.city_id = city.city_id "
-                + "INNER JOIN country ON country.country_id = city.country_id "
-                + "WHERE city.city = ? AND country.country = ?)";
+        if (pais != null && ciudad != null) {
+            String query = "Select * from staff  where address_id = (select address.address_id from address inner join staff on  address.address_id=staff.address_id inner join city on address.city_id = city.city_id inner join country on country.country_id = city.country_id where city.city = '" + ciudad + "' and country.country = '" + pais + "')";
 
-        executeAndDisplayQuery(query, ciudad, pais);
+            executeAndDisplayQuery(query);
+        }
     }
-}
-
-
 
     private void executeAndDisplayQuery(String query, Object... parameters) {
         DefaultTableModel tableModel = new DefaultTableModel();
@@ -263,6 +257,23 @@ private void displayInfoEmpleados() {
         }
     }
 
+    private void formatTable(JTable table) {
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        TableColumnModel columnModel = table.getColumnModel();
+
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int width = 120;  // Ancho mínimo
+
+            for (int row = 0; row < table.getRowCount(); row++) {
+                TableCellRenderer cellRenderer = table.getCellRenderer(row, column);
+                Component c = table.prepareRenderer(cellRenderer, row, column);
+                width = Math.max(c.getPreferredSize().width + 1, width);
+            }
+
+            columnModel.getColumn(column).setPreferredWidth(width);
+        }
+    }
+
     private void playSongs() {
         String[] songNames = {"Hoy.wav", "IDWMAT.wav", "Iris.wav", "MJTCU.wav", "EBYT.wav", "DJGFU.wav",
             "Flaca.wav", "ElMundoTrasElCristal.wav", "TheReason.wav", "ChasingCars.wav"};
@@ -287,23 +298,31 @@ private void displayInfoEmpleados() {
         audioClips[currentClipIndex].stop();
     }
 
-    private void initializeAudioClips() {
-        audioClips = new Clip[10];
+ private void initializeAudioClips() {
+    audioClips = new Clip[10];
 
-        try {
-            String[] songNames = {"Hoy.wav", "IDWMAT.wav", "Iris.wav", "MJTCU.wav", "EBYT.wav", "DJGFU.wav",
-                "Flaca.wav", "ElMundoTrasElCristal.wav", "TheReason.wav", "ChasingCars.wav"};
+    try {
+        String[] songNames = {"Hoy.wav", "IDWMAT.wav", "Iris.wav", "MJTCU.wav", "EBYT.wav", "DJGFU.wav",
+            "Flaca.wav", "ElMundoTrasElCristal.wav", "TheReason.wav", "ChasingCars.wav"};
 
-            for (int i = 0; i < audioClips.length; i++) {
-                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(songNames[i]));
-                audioClips[i] = AudioSystem.getClip();
-                audioClips[i].open(audioInputStream);
+        for (int i = 0; i < audioClips.length; i++) {
+            File audioFile = new File(songNames[i]);
+
+            if (!audioFile.exists()) {
+                handleError("Archivo de audio no encontrado: " + audioFile.getName(), null);
+                return;
             }
 
-        } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
-            handleError("Error al inicializar los clips de audio.", e);
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(audioFile);
+            audioClips[i] = AudioSystem.getClip();
+            audioClips[i].open(audioInputStream);
         }
+
+    } catch (IOException | LineUnavailableException | UnsupportedAudioFileException e) {
+        handleError("Error al inicializar los clips de audio.", e);
     }
+}
+
 
     private void playNextAudioClip() {
         currentClipIndex = (currentClipIndex + 1) % audioClips.length;
